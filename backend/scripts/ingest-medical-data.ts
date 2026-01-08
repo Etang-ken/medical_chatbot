@@ -3,9 +3,21 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import csv from 'csv-parser';
 import { PrismaClient } from '@prisma/client';
+import dotenv from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, '../../.env') });
+
+const dbUrl = process.env.DATABASE_URL;
+if (!dbUrl) {
+  console.error('DATABASE_URL is not set. Ensure medical_chatbot/.env exists and contains DATABASE_URL.');
+  process.exit(1);
+}
+
+const maskedDbUrl = dbUrl.replace(/:\/\/([^:]+):([^@]+)@/, '://$1:***@');
+console.log(`🔌 Using DATABASE_URL: ${maskedDbUrl}`);
 
 const prisma = new PrismaClient();
 
@@ -23,17 +35,35 @@ function cleanTags(tagsString: string): string[] {
     }
 
     let cleaned = tagsString.trim();
-    
-    if (cleaned.startsWith('[') && cleaned.endsWith(']')) {
-      cleaned = cleaned.slice(1, -1);
+
+    const extracted: string[] = [];
+    const quotedTokenRegex = /'([^']+)'|\"([^\"]+)\"/g;
+    let match: RegExpExecArray | null;
+
+    while ((match = quotedTokenRegex.exec(cleaned)) !== null) {
+      const token = (match[1] ?? match[2] ?? '').trim();
+      if (token) {
+        extracted.push(token);
+      }
     }
-    
-    const tags = cleaned
-      .split(',')
-      .map(tag => tag.trim().replace(/^['"]|['"]$/g, ''))
-      .filter(tag => tag.length > 0);
-    
-    return tags;
+
+    let tags: string[];
+    if (extracted.length > 0) {
+      tags = extracted;
+    } else {
+      cleaned = cleaned.replace(/^\[|\]$/g, '');
+      tags = cleaned
+        .split(/[\s,]+/)
+        .map((tag) => tag.trim().replace(/^['\"]|['\"]$/g, ''))
+        .filter((tag) => tag.length > 0);
+    }
+
+    const normalized = tags
+      .map((t) => t.toLowerCase())
+      .map((t) => t.replace(/\s+/g, ' ').trim())
+      .filter((t) => t.length > 0);
+
+    return Array.from(new Set(normalized));
   } catch (error) {
     console.error('Error cleaning tags:', tagsString, error);
     return [];
