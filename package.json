@@ -1,0 +1,41 @@
+{
+  "name": "medical-chatbot",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev:backend": "tsx watch backend/src/server.ts",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:backend": "tsc -p backend/tsconfig.json",
+    "build:frontend": "cd frontend && npm run build",
+    "ingest": "tsx backend/scripts/ingest-medical-data.ts",
+    "prisma:generate": "prisma generate --schema=backend/prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema=backend/prisma/schema.prisma",
+    "prisma:studio": "prisma studio --schema=backend/prisma/schema.prisma",
+    "test:ai": "tsx backend/scripts/test-ai-service.ts"
+  },
+  "dependencies": {
+    "@langchain/community": "^1.1.2",
+    "@langchain/core": "^1.1.9",
+    "@langchain/openai": "^1.2.1",
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.0.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "langchain": "^1.2.4",
+    "openai": "^6.9.1",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^24.10.1",
+    "prisma": "^5.22.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
